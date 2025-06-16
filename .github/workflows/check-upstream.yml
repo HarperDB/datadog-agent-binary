@@ -1,0 +1,37 @@
+name: Check for New Datadog Agent Releases
+
+on:
+  schedule:
+    # Run daily at 10:00 UTC
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new upstream release
+        id: check
+        run: |
+          # Get latest Datadog Agent release
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/DataDog/datadog-agent/releases/latest | jq -r '.tag_name')
+          echo "Latest upstream release: $LATEST_RELEASE"
+
+          # Check if we already have this version tagged (with v prefix)
+          if git tag --list | grep -q "^v${LATEST_RELEASE}$"; then
+            echo "Version v$LATEST_RELEASE already exists"
+          else
+            echo "New version found: $LATEST_RELEASE"
+            echo "Creating tag: v$LATEST_RELEASE"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+
+            git tag "v$LATEST_RELEASE"
+            git push origin "v$LATEST_RELEASE"
+          fi
