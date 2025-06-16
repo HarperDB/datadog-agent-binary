@@ -1,0 +1,188 @@
+name: Build and Release Datadog Agent Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      datadog_version:
+        description: "Datadog Agent version to build"
+        required: false
+        default: "latest"
+
+env:
+  NODE_VERSION: "22"
+  GO_VERSION: "1.24"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          # Linux builds
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: ubuntu-latest
+            platform: linux-arm64
+
+          # macOS builds
+          - os: macos-13
+            platform: darwin-x64
+          - os: macos-latest
+            platform: darwin-arm64
+
+          # Windows builds
+          - os: windows-latest
+            platform: windows-x64
+          - os: windows-11-arm
+            platform: windows-arm64
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Build ${{ matrix.platform }}
+        env:
+          DATADOG_VERSION: ${{ github.event.inputs.datadog_version }}
+        run: node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ env.DATADOG_VERSION || 'latest' }}
+
+      - name: Upload ${{ matrix.platform }} artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-binaries
+          path: build/${{ matrix.platform }}/
+          retention-days: 90
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+
+          # Create compressed archives for each platform
+          cd artifacts
+
+          # Linux platforms
+          for arch in x64 arm64; do
+            if [ -d "linux-${arch}-binaries" ]; then
+              cd "linux-${arch}-binaries"
+              tar -czf "../../release-assets/datadog-agent-${{ github.ref_name }}-linux-${arch}.tar.gz" *
+              cd ..
+            fi
+          done
+
+          # macOS platforms
+          for arch in x64 arm64; do
+            if [ -d "darwin-${arch}-binaries" ]; then
+              cd "darwin-${arch}-binaries"
+              tar -czf "../../release-assets/datadog-agent-${{ github.ref_name }}-darwin-${arch}.tar.gz" *
+              cd ..
+            fi
+          done
+
+          # Windows platforms
+          for arch in x64 arm64; do
+            if [ -d "windows-${arch}-binaries" ]; then
+              cd "windows-${arch}-binaries"
+              zip -r "../../release-assets/datadog-agent-${{ github.ref_name }}-windows-${arch}.zip" *
+              cd ..
+            fi
+          done
+
+      - name: Generate checksums
+        run: |
+          cd release-assets
+          sha256sum * > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Datadog Agent Binary ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            release-assets/*
+          body: |
+            # @harperdb/datadog-agent-binary ${{ github.ref_name }}
+
+            Pre-compiled Datadog Agent binaries for all supported platforms.
+
+            ## Supported Platforms
+
+            - **Linux x64**: `datadog-agent-${{ github.ref_name }}-linux-x64.tar.gz`
+            - **Linux ARM64**: `datadog-agent-${{ github.ref_name }}-linux-arm64.tar.gz`
+            - **macOS x64**: `datadog-agent-${{ github.ref_name }}-darwin-x64.tar.gz`
+            - **macOS ARM64**: `datadog-agent-${{ github.ref_name }}-darwin-arm64.tar.gz`
+            - **Windows x64**: `datadog-agent-${{ github.ref_name }}-windows-x64.zip`
+            - **Windows ARM64**: `datadog-agent-${{ github.ref_name }}-windows-arm64.zip` ✨ **Native builds!**
+
+            ## NPM Package
+
+            ```bash
+            npm install @harperdb/datadog-agent-binary
+            ```
+
+            ## Verification
+
+            ```bash
+            sha256sum -c checksums.txt
+            ```
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
