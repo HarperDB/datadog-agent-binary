@@ -1,4 +1,4 @@
-import { BuildConfig, Platform } from '../types.js';
+import { BuildConfig } from '../types.js';
 import { BaseBuilder } from './base.js';
 import { LinuxBuilder } from './linux.js';
 import { WindowsBuilder } from './windows.js';

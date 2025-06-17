@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
-import { BuildConfig, BuildResult, Platform } from '../types.js';
+import { BuildConfig, BuildResult } from '../types.js';
 import { logger } from '../logger.js';
 
 export abstract class BaseBuilder {
