@@ -59,12 +59,21 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
-      - name: Build ${{ matrix.platform }}
-        env:
-          DATADOG_VERSION: ${{ github.event.inputs.datadog_version || (startsWith(github.ref, 'refs/tags/v') && substring(github.ref, 11)) || '' }}
+      - name: Extract version from tag
+        id: extract_version
         run: |
-          if [ -n "${{ env.DATADOG_VERSION }}" ]; then
-            node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ env.DATADOG_VERSION }}
+          if [ -n "${{ github.event.inputs.datadog_version }}" ]; then
+            echo "version=${{ github.event.inputs.datadog_version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build ${{ matrix.platform }}
+        run: |
+          if [ -n "${{ steps.extract_version.outputs.version }}" ]; then
+            node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ steps.extract_version.outputs.version }}
           else
             node dist/cli.js build --platform ${{ matrix.platform }}
           fi
