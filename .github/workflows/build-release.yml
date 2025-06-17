@@ -9,7 +9,6 @@ on:
       datadog_version:
         description: "Datadog Agent version to build"
         required: false
-        default: "latest"
 
 env:
   NODE_VERSION: "22"
@@ -62,8 +61,13 @@ jobs:
 
       - name: Build ${{ matrix.platform }}
         env:
-          DATADOG_VERSION: ${{ github.event.inputs.datadog_version }}
-        run: node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ env.DATADOG_VERSION || 'latest' }}
+          DATADOG_VERSION: ${{ github.event.inputs.datadog_version || (startsWith(github.ref, 'refs/tags/v') && substring(github.ref, 11)) || '' }}
+        run: |
+          if [ -n "${{ env.DATADOG_VERSION }}" ]; then
+            node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ env.DATADOG_VERSION }}
+          else
+            node dist/cli.js build --platform ${{ matrix.platform }}
+          fi
 
       - name: Upload ${{ matrix.platform }} artifacts
         uses: actions/upload-artifact@v4
