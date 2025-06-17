@@ -160,7 +160,7 @@ export class BinaryManager {
     const fileName = `datadog-agent-${version}-${platformString}.tar.gz`;
 
     // Download from this package's GitHub releases
-    const downloadUrl = `https://github.com/your-org/datadog-agent-binary/releases/download/v${version}/${fileName}`;
+    const downloadUrl = `https://github.com/HarperDB/datadog-agent-binary/releases/download/v${version}/${fileName}`;
 
     return {
       version,
