@@ -59,8 +59,9 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
-      - name: Extract version from tag
-        id: extract_version
+      - name: Extract version from tag (Unix)
+        if: runner.os != 'Windows'
+        id: extract_version_unix
         run: |
           if [ -n "${{ github.event.inputs.datadog_version }}" ]; then
             echo "version=${{ github.event.inputs.datadog_version }}" >> $GITHUB_OUTPUT
@@ -70,13 +71,38 @@ jobs:
             echo "version=" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build ${{ matrix.platform }}
+      - name: Extract version from tag (Windows)
+        if: runner.os == 'Windows'
+        id: extract_version_windows
         run: |
-          if [ -n "${{ steps.extract_version.outputs.version }}" ]; then
-            node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ steps.extract_version.outputs.version }}
+          if ("${{ github.event.inputs.datadog_version }}" -ne "") {
+            echo "version=${{ github.event.inputs.datadog_version }}" >> $env:GITHUB_OUTPUT
+          } elseif ("${{ github.ref }}" -like "refs/tags/v*") {
+            $version = "${{ github.ref }}" -replace "refs/tags/v", ""
+            echo "version=$version" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "version=" >> $env:GITHUB_OUTPUT
+          }
+        shell: pwsh
+
+      - name: Build ${{ matrix.platform }} (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          if [ -n "${{ steps.extract_version_unix.outputs.version }}" ]; then
+            node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ steps.extract_version_unix.outputs.version }}
           else
             node dist/cli.js build --platform ${{ matrix.platform }}
           fi
+
+      - name: Build ${{ matrix.platform }} (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          if ("${{ steps.extract_version_windows.outputs.version }}" -ne "") {
+            node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ steps.extract_version_windows.outputs.version }}
+          } else {
+            node dist/cli.js build --platform ${{ matrix.platform }}
+          }
+        shell: pwsh
 
       - name: Upload ${{ matrix.platform }} artifacts
         uses: actions/upload-artifact@v4
@@ -84,6 +110,7 @@ jobs:
           name: ${{ matrix.platform }}-binaries
           path: build/${{ matrix.platform }}/
           retention-days: 90
+          if-no-files-found: error
 
   release:
     needs: build
