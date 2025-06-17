@@ -19,7 +19,7 @@ program
   .description('Build Datadog Agent for specified platform(s)')
   .option('-p, --platform <platform>', 'Target platform (os-arch, e.g., linux-x64)')
   .option('-a, --all', 'Build for all supported platforms')
-  .option('-v, --version <version>', 'Datadog Agent version to build')
+  .option('--datadog-version <version>', 'Datadog Agent version to build')
   .option('-o, --output <dir>', 'Output directory', './build')
   .option('-s, --source <dir>', 'Source directory (if already downloaded)')
   .option('--build-args <args>', 'Additional build arguments')
@@ -38,7 +38,7 @@ program
         logger.info('Building for all supported platforms...');
         // For --all builds, let the library handle platform-specific subdirs
         results = await builder.buildForAllPlatforms({
-          version: options.version,
+          version: options.datadogVersion,
           sourceDir: options.source,
           buildArgs: options.buildArgs?.split(' ')
         });
@@ -51,7 +51,7 @@ program
         logger.info(`Building for ${options.platform}...`);
         const outputDir = path.join(options.output, `${os}-${arch}`);
         const result = await builder.buildForPlatform(platform, {
-          version: options.version,
+          version: options.datadogVersion,
           outputDir,
           sourceDir: options.source,
           buildArgs: options.buildArgs?.split(' ')
@@ -62,7 +62,7 @@ program
         const currentPlatform = detectPlatform();
         const outputDir = path.join(options.output, `${currentPlatform.os}-${currentPlatform.arch}`);
         const result = await builder.buildForCurrentPlatform({
-          version: options.version,
+          version: options.datadogVersion,
           outputDir,
           sourceDir: options.source,
           buildArgs: options.buildArgs?.split(' ')

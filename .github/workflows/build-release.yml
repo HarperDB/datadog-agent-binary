@@ -91,7 +91,7 @@ jobs:
           DEBUG: true
         run: |
           if [ -n "${{ steps.extract_version_unix.outputs.version }}" ]; then
-            node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ steps.extract_version_unix.outputs.version }}
+            node dist/cli.js build --platform ${{ matrix.platform }} --datadog-version ${{ steps.extract_version_unix.outputs.version }}
           else
             node dist/cli.js build --platform ${{ matrix.platform }}
           fi
@@ -102,7 +102,7 @@ jobs:
           DEBUG: true
         run: |
           if ("${{ steps.extract_version_windows.outputs.version }}" -ne "") {
-            node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ steps.extract_version_windows.outputs.version }}
+            node dist/cli.js build --platform ${{ matrix.platform }} --datadog-version ${{ steps.extract_version_windows.outputs.version }}
           } else {
             node dist/cli.js build --platform ${{ matrix.platform }}
           }
@@ -114,7 +114,6 @@ jobs:
           name: ${{ matrix.platform }}-binaries
           path: build/${{ matrix.platform }}/
           retention-days: 90
-          if-no-files-found: error
 
   release:
     needs: build
