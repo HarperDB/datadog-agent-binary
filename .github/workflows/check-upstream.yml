@@ -19,8 +19,29 @@ jobs:
       - name: Check for new upstream release
         id: check
         run: |
-          # Get latest Datadog Agent release
-          LATEST_RELEASE=$(curl -s https://api.github.com/repos/DataDog/datadog-agent/releases/latest | jq -r '.tag_name')
+          # Get latest Datadog Agent release with error handling
+          echo "Fetching latest Datadog Agent release..."
+          RESPONSE=$(curl -s https://api.github.com/repos/DataDog/datadog-agent/releases/latest)
+          
+          # Check if curl succeeded
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to fetch release data from GitHub API"
+            exit 1
+          fi
+          
+          # Debug: show the response
+          echo "API Response: $RESPONSE"
+          
+          # Extract tag name
+          LATEST_RELEASE=$(echo "$RESPONSE" | jq -r '.tag_name')
+          
+          # Check if jq extraction succeeded
+          if [ "$LATEST_RELEASE" = "null" ] || [ -z "$LATEST_RELEASE" ]; then
+            echo "Error: Failed to extract tag_name from API response"
+            echo "Response was: $RESPONSE"
+            exit 1
+          fi
+          
           echo "Latest upstream release: $LATEST_RELEASE"
 
           # Check if we already have this version tagged (with v prefix)
