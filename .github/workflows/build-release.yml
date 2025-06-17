@@ -87,6 +87,8 @@ jobs:
 
       - name: Build ${{ matrix.platform }} (Unix)
         if: runner.os != 'Windows'
+        env:
+          DEBUG: true
         run: |
           if [ -n "${{ steps.extract_version_unix.outputs.version }}" ]; then
             node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ steps.extract_version_unix.outputs.version }}
@@ -96,6 +98,8 @@ jobs:
 
       - name: Build ${{ matrix.platform }} (Windows)
         if: runner.os == 'Windows'
+        env:
+          DEBUG: true
         run: |
           if ("${{ steps.extract_version_windows.outputs.version }}" -ne "") {
             node dist/cli.js build --platform ${{ matrix.platform }} --version ${{ steps.extract_version_windows.outputs.version }}
