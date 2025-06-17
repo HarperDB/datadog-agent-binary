@@ -12,6 +12,17 @@ export abstract class BaseBuilder {
 
   abstract build(): Promise<BuildResult>;
 
+  protected async buildCommon(): Promise<void> {
+    logger.info('Installing build tools...');
+    await this.executeCommand('pip install dda');
+    
+    logger.info('Installing Go tools...');
+    await this.executeCommand('dda inv install-tools');
+    
+    logger.info('Building agent...');
+    await this.executeCommand('dda inv agent.build --build-exclude=systemd');
+  }
+
   protected async executeCommand(command: string, cwd?: string): Promise<string> {
     logger.debug(`Executing: ${command}`);
     
@@ -119,15 +130,6 @@ export abstract class BaseBuilder {
     return baseName;
   }
 
-  protected getBuildTags(): string[] {
-    const tags = ['netgo'];
-    
-    if (this.config.platform.os === 'linux') {
-      tags.push('static_build');
-    }
-    
-    return tags;
-  }
 
   protected async ensureOutputDirectory(): Promise<void> {
     const { mkdir } = await import('fs/promises');
@@ -245,6 +247,31 @@ export abstract class BaseBuilder {
   }
 
   protected abstract createDockerBuildScript(): string;
+
+  protected createCommonDockerBuildScript(arch: string): string {
+    return `#!/bin/bash
+set -e
+
+echo "Setting up build environment..."
+export CGO_ENABLED=1
+export GOARCH=${arch === 'x64' ? 'amd64' : 'arm64'}
+
+echo "Installing build tools..."
+pip install dda
+
+echo "Installing Go tools..."
+dda inv install-tools
+
+echo "Building agent..."
+dda inv agent.build --build-exclude=systemd
+
+echo "Copying binaries to output directory..."
+mkdir -p /workspace/output
+cp build/* /workspace/output/
+
+echo "Build completed successfully!"
+`;
+  }
 
   protected async writeBuildScript(filePath: string, content: string): Promise<void> {
     const { writeFile, chmod } = await import('fs/promises');

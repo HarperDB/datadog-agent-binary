@@ -20,16 +20,7 @@ export class LinuxBuilder extends BaseBuilder {
         return await this.buildWithDocker(startTime, 'Dockerfile.linux', 'docker-build.sh');
       }
       
-      logger.info('Installing Go dependencies...');
-      await this.executeCommand('go mod download');
-      
-      logger.info('Building agent binary...');
-      await this.buildAgent();
-      
-      logger.info('Building other components...');
-      await this.buildProcessAgent();
-      await this.buildTraceAgent();
-      await this.buildSystemProbe();
+      await this.buildCommon();
       
       logger.info('Copying binaries to output directory...');
       await this.copyBinariesToOutput();
@@ -60,99 +51,7 @@ export class LinuxBuilder extends BaseBuilder {
     }
   }
 
-  private async buildAgent(): Promise<void> {
-    const { arch } = this.config.platform;
-    const buildTags = this.getBuildTags();
-    const outputPath = path.join('build', this.getOutputBinaryName());
-    
-    // Get version information
-    const version = this.config.version || '7.66.1';
-    const buildDate = new Date().toISOString();
-    
-    let gitCommit = 'unknown';
-    let gitVersion = version;
-    
-    try {
-      gitCommit = await this.executeCommand('git rev-parse HEAD');
-      gitCommit = gitCommit.trim();
-      gitVersion = await this.executeCommand('git describe --tags --always');
-      gitVersion = gitVersion.trim();
-    } catch {
-      // Use fallback values if git commands fail
-      logger.debug('Git commands failed, using fallback version info');
-    }
-    
-    const ldflags = [
-      '-s',
-      '-w',
-      `-X github.com/DataDog/datadog-agent/pkg/version.AgentVersion=${gitVersion}`,
-      `-X github.com/DataDog/datadog-agent/pkg/version.Commit=${gitCommit}`,
-      `-X github.com/DataDog/datadog-agent/pkg/version.BuildDate=${buildDate}`
-    ].join(' ');
-    
-    let command = `go build -tags "${buildTags.join(' ')}" -ldflags "${ldflags}" -o "${outputPath}" ./cmd/agent`;
-    
-    if (arch === 'arm64') {
-      command = `GOARCH=arm64 ${command}`;
-    }
-    
-    await this.executeCommand(command);
-  }
 
-  private async buildProcessAgent(): Promise<void> {
-    const { arch } = this.config.platform;
-    const outputPath = path.join('build', 'process-agent');
-    
-    let command = `go build -ldflags "-s -w" -o "${outputPath}" ./cmd/process-agent`;
-    
-    if (arch === 'arm64') {
-      command = `GOARCH=arm64 ${command}`;
-    }
-    
-    await this.executeCommand(command);
-  }
-
-  private async buildTraceAgent(): Promise<void> {
-    const { arch } = this.config.platform;
-    const outputPath = path.join('build', 'trace-agent');
-    
-    let command = `go build -ldflags "-s -w" -o "${outputPath}" ./cmd/trace-agent`;
-    
-    if (arch === 'arm64') {
-      command = `GOARCH=arm64 ${command}`;
-    }
-    
-    await this.executeCommand(command);
-  }
-
-  private async buildSystemProbe(): Promise<void> {
-    const { arch } = this.config.platform;
-    const outputPath = path.join('build', 'system-probe');
-    
-    let command = `go build -tags "netgo linux_bpf" -ldflags "-s -w" -o "${outputPath}" ./cmd/system-probe`;
-    
-    if (arch === 'arm64') {
-      command = `GOARCH=arm64 ${command}`;
-    }
-    
-    await this.executeCommand(command);
-  }
-
-  protected getBuildTags(): string[] {
-    const tags = ['netgo'];
-    
-    // For cross-compilation from macOS, use simpler build tags and exclude problematic components
-    const hostPlatform = process.platform;
-    if (hostPlatform === 'darwin') {
-      // Exclude components that have build conflicts when CGO is disabled
-      tags.push('!ebpf');
-      return tags;
-    }
-    
-    // Native Linux build can use all tags
-    tags.push('static_build');
-    return tags;
-  }
 
   protected createDockerBuildScript(): string {
     const { arch } = this.config.platform;
@@ -188,31 +87,14 @@ else
     echo "Native compilation for $TARGET_ARCH"
 fi
 
-echo "Installing Go dependencies..."
-go mod download
+echo "Installing build tools..."
+pip install dda
 
-echo "Building agent binary..."
-mkdir -p build
+echo "Installing Go tools..."
+dda inv install-tools
 
-# Get version information
-GIT_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-GIT_VERSION=$(git describe --tags --always 2>/dev/null || echo "${version}")
-
-# Build main agent
-go build -tags "netgo static_build" \\
-  -ldflags "-s -w -X github.com/DataDog/datadog-agent/pkg/version.AgentVersion=\${GIT_VERSION} -X github.com/DataDog/datadog-agent/pkg/version.Commit=\${GIT_COMMIT} -X github.com/DataDog/datadog-agent/pkg/version.BuildDate=${buildDate}" \\
-  -o "build/datadog-agent" ./cmd/agent
-
-echo "Building other components..."
-
-# Build process agent
-go build -ldflags "-s -w" -o "build/process-agent" ./cmd/process-agent
-
-# Build trace agent  
-go build -ldflags "-s -w" -o "build/trace-agent" ./cmd/trace-agent
-
-# Build system probe
-go build -tags "netgo static_build" -ldflags "-s -w" -o "build/system-probe" ./cmd/system-probe
+echo "Building agent..."
+dda inv agent.build --build-exclude=systemd
 
 echo "Copying binaries to output directory..."
 mkdir -p /workspace/output
