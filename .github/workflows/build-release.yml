@@ -23,8 +23,10 @@ jobs:
           # Linux builds
           - os: ubuntu-latest
             platform: linux-x64
-          - os: ubuntu-24.04-arm64
-            platform: linux-arm64
+          # Disable Linux ARM64 builds until this is fixed:
+          # https://github.com/DataDog/datadog-agent/issues/38088
+          # - os: ubuntu-24.04-arm64
+          #   platform: linux-arm64
 
           # macOS builds
           - os: macos-13
@@ -35,8 +37,9 @@ jobs:
           # Windows builds
           - os: windows-latest
             platform: windows-x64
-          - os: windows-11-arm
-            platform: windows-arm64
+          # Disable Windows ARM64 builds until Chocolatey supports it
+          # - os: windows-11-arm
+          #   platform: windows-arm64
 
     runs-on: ${{ matrix.os }}
     steps:
