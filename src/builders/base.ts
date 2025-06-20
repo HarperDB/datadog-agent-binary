@@ -38,7 +38,7 @@ export abstract class BaseBuilder {
         cwd: workingDir,
         encoding: "utf8",
         stdio: ["inherit", "pipe", "inherit"], // stdin inherit, stdout pipe, stderr inherit
-        timeout: 120000, // Default 2 minute timeout
+        timeout: 1200000, // Default 20 minute timeout
         env: {
           ...process.env,
           ...this.getEnvironmentVariables(),
@@ -146,6 +146,4 @@ export abstract class BaseBuilder {
       }
     }
   }
-
-
 }
