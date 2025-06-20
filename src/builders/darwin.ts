@@ -60,21 +60,4 @@ export class DarwinBuilder extends BaseBuilder {
     throw new Error('Docker builds not supported for Darwin platform');
   }
 
-  protected getEnvironmentVariables(): Record<string, string> {
-    const env = super.getEnvironmentVariables();
-    
-    if (this.config.platform.arch === 'arm64') {
-      env.CC = 'clang';
-      env.CXX = 'clang++';
-      env.CGO_CFLAGS = '-arch arm64';
-      env.CGO_LDFLAGS = '-arch arm64';
-    } else {
-      env.CC = 'clang';
-      env.CXX = 'clang++';
-      env.CGO_CFLAGS = '-arch x86_64';
-      env.CGO_LDFLAGS = '-arch x86_64';
-    }
-    
-    return env;
-  }
 }

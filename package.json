@@ -12,7 +12,7 @@
     "dev": "tsc --watch",
     "start": "node dist/cli.js",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist/ build/ release/ source/",
+    "clean": "rm -rf dist/ build/ release/ source/ go/",
     "build-all": "npm run build && node dist/cli.js build --all",
     "build-platform": "npm run build && node dist/cli.js build",
     "prepublishOnly": "npm run build",
@@ -27,11 +27,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
     "node-fetch": "^3.3.2",
     "tar": "^6.2.0",
-    "yauzl": "^2.10.0",
-    "commander": "^11.1.0",
-    "chalk": "^5.3.0"
+    "yauzl": "^2.10.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

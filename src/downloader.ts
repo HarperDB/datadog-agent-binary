@@ -24,13 +24,13 @@ export class DatadogAgentDownloader {
   }
 
   async downloadSource(config: DownloadConfig): Promise<string> {
-    const { version, outputDir } = config;
+    const { version, extractTo } = config;
 
     logger.info(`Downloading Datadog Agent source version ${version}...`);
 
-    await fs.mkdir(outputDir, { recursive: true });
+    await fs.mkdir(path.dirname(extractTo), { recursive: true });
 
-    const extractPath = path.join(outputDir, "source");
+    const extractPath = extractTo;
 
     // Remove existing source directory if it exists
     await fs.rm(extractPath, { recursive: true, force: true });
@@ -45,14 +45,14 @@ export class DatadogAgentDownloader {
       execSync(
         `git clone --depth 1 --branch ${version} ${DATADOG_AGENT_REPO} "${extractPath}"`,
         {
-          stdio: "inherit",
+          stdio: ["inherit", "pipe", "inherit"],
         },
       );
 
       // Ensure we have the correct version information
       const gitOutput = execSync(
         `git -C "${extractPath}" describe --tags --always`,
-        { encoding: "utf8" },
+        { encoding: "utf8", stdio: ["inherit", "pipe", "inherit"] },
       );
       logger.info(`Repository cloned at version: ${gitOutput.trim()}`);
     } catch (error) {
@@ -61,7 +61,7 @@ export class DatadogAgentDownloader {
 
       const tarballUrl = `${DATADOG_AGENT_REPO}/archive/refs/tags/${version}.tar.gz`;
       const tarballPath = path.join(
-        outputDir,
+        path.dirname(extractTo),
         `datadog-agent-${version}.tar.gz`,
       );
 

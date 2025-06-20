@@ -25,7 +25,6 @@ export class DatadogAgentBuilder {
     options: {
       version?: string;
       outputDir?: string;
-      sourceDir?: string;
       buildArgs?: string[];
     } = {},
   ): Promise<BuildResult> {
@@ -36,19 +35,25 @@ export class DatadogAgentBuilder {
     const outputDir =
       options.outputDir ||
       path.join(process.cwd(), "build", `${platform.os}-${platform.arch}`);
-    const sourceDir = options.sourceDir || path.join(process.cwd(), "source");
+    // Create GOPATH structure within our project directory
+    const projectGoPath = path.join(process.cwd(), "go");
+    const sourceDir = path.join(
+      projectGoPath,
+      "src",
+      "github.com",
+      "DataDog",
+      "datadog-agent",
+    );
 
     logger.info(
       `Building Datadog Agent ${version} for ${platform.os}-${platform.arch}`,
     );
 
-    if (!options.sourceDir) {
-      await this.downloader.downloadSource({
-        version,
-        platform,
-        outputDir: path.dirname(sourceDir),
-      });
-    }
+    await this.downloader.downloadSource({
+      version,
+      platform,
+      extractTo: sourceDir,
+    });
 
     await this.downloader.checkBuildDependencies(platform);
 

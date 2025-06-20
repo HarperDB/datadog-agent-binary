@@ -21,7 +21,6 @@ program
   .option('-a, --all', 'Build for all supported platforms')
   .option('--datadog-version <version>', 'Datadog Agent version to build')
   .option('-o, --output <dir>', 'Output directory', './build')
-  .option('-s, --source <dir>', 'Source directory (if already downloaded)')
   .option('--build-args <args>', 'Additional build arguments')
   .option('-d, --debug', 'Enable debug logging')
   .action(async (options) => {
@@ -39,7 +38,6 @@ program
         // For --all builds, let the library handle platform-specific subdirs
         results = await builder.buildForAllPlatforms({
           version: options.datadogVersion,
-          sourceDir: options.source,
           buildArgs: options.buildArgs?.split(' ')
         });
       } else if (options.platform) {
@@ -53,7 +51,6 @@ program
         const result = await builder.buildForPlatform(platform, {
           version: options.datadogVersion,
           outputDir,
-          sourceDir: options.source,
           buildArgs: options.buildArgs?.split(' ')
         });
         results = [result];
@@ -64,7 +61,6 @@ program
         const result = await builder.buildForCurrentPlatform({
           version: options.datadogVersion,
           outputDir,
-          sourceDir: options.source,
           buildArgs: options.buildArgs?.split(' ')
         });
         results = [result];
