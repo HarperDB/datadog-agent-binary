@@ -13,16 +13,6 @@ export class LinuxBuilder extends BaseBuilder {
     try {
       await this.ensureOutputDirectory();
 
-      // Check if we need to use Docker for cross-compilation
-      const hostPlatform = process.platform;
-      if (hostPlatform !== "linux" && (await this.isDockerAvailable())) {
-        logger.info("Using Docker for cross-compilation...");
-        return await this.buildWithDocker(
-          startTime,
-          "Dockerfile.linux",
-          "docker-build.sh",
-        );
-      }
 
       await this.buildCommon();
 
@@ -54,53 +44,5 @@ export class LinuxBuilder extends BaseBuilder {
     }
   }
 
-  protected createDockerBuildScript(): string {
-    const { arch } = this.config.platform;
-
-    return `#!/bin/bash
-set -e
-
-echo "Setting up build environment..."
-export CGO_ENABLED=1
-export GOOS=linux
-export GOARCH=${arch === "x64" ? "amd64" : "arm64"}
-
-# Set up cross-compilation environment based on target architecture
-HOST_ARCH=$(uname -m)
-TARGET_ARCH="${arch === "x64" ? "amd64" : "arm64"}"
-
-if [ "$HOST_ARCH" = "x86_64" ] && [ "$TARGET_ARCH" = "arm64" ]; then
-    # Cross-compiling from amd64 to arm64
-    export CC=aarch64-linux-gnu-gcc
-    export CXX=aarch64-linux-gnu-g++
-    echo "Cross-compiling from amd64 to arm64"
-elif [ "$HOST_ARCH" = "aarch64" ] && [ "$TARGET_ARCH" = "amd64" ]; then
-    # Cross-compiling from arm64 to amd64
-    export CC=x86_64-linux-gnu-gcc
-    export CXX=x86_64-linux-gnu-g++
-    echo "Cross-compiling from arm64 to amd64"
-else
-    # Native compilation
-    export CC=gcc
-    export CXX=g++
-    echo "Native compilation for $TARGET_ARCH"
-fi
-
-echo "Installing build tools..."
-pip install dda
-
-echo "Installing Go tools..."
-dda --no-interactive inv install-tools
-
-echo "Building agent..."
-dda --no-interactive inv agent.build --build-exclude=systemd
-
-echo "Copying binaries to output directory..."
-mkdir -p /workspace/output
-cp build/* /workspace/output/
-
-echo "Build completed successfully!"
-`;
-  }
 
 }

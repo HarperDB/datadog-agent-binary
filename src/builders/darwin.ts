@@ -55,9 +55,5 @@ export class DarwinBuilder extends BaseBuilder {
   }
 
 
-  protected createDockerBuildScript(): string {
-    // Darwin builds don't use Docker since they run natively on macOS
-    throw new Error('Docker builds not supported for Darwin platform');
-  }
 
 }
