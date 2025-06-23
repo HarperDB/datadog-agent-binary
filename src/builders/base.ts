@@ -37,7 +37,7 @@ export abstract class BaseBuilder {
       const result = execSync(command, {
         cwd: workingDir,
         encoding: "utf8",
-        stdio: ["inherit", "pipe", "inherit"], // stdin inherit, stdout pipe, stderr inherit
+        stdio: ["inherit", "pipe", "pipe"], // capture both stdout and stderr
         timeout: 1200000, // Default 20 minute timeout
         env: {
           ...process.env,
@@ -48,7 +48,17 @@ export abstract class BaseBuilder {
       return result.toString();
     } catch (error: any) {
       logger.error(`Command failed: ${command}`);
+      logger.error(`Exit code: ${error.status}`);
       logger.error(`Error: ${error.message}`);
+      
+      // Show command output if available
+      if (error.stdout) {
+        logger.error(`Stdout:\n${error.stdout.toString()}`);
+      }
+      if (error.stderr) {
+        logger.error(`Stderr:\n${error.stderr.toString()}`);
+      }
+      
       throw error;
     }
   }
