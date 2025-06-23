@@ -144,7 +144,24 @@ export abstract class BaseBuilder {
     ];
 
     for (const binary of binaries) {
-      const sourcePath = path.join(this.config.sourceDir, "build", binary);
+      // The datadog-agent binary is in bin/agent/, others might be in bin/ or other locations
+      let sourcePath: string;
+      if (binary.startsWith("datadog-agent")) {
+        sourcePath = path.join(this.config.sourceDir, "bin", "agent", "agent");
+      } else {
+        // Try bin directory first, then build directory
+        const binPath = path.join(this.config.sourceDir, "bin", binary);
+        const buildPath = path.join(this.config.sourceDir, "build", binary);
+        
+        try {
+          const { access } = await import("fs/promises");
+          await access(binPath);
+          sourcePath = binPath;
+        } catch {
+          sourcePath = buildPath;
+        }
+      }
+      
       const destPath = path.join(absoluteOutputDir, binary);
 
       try {
