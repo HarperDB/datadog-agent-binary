@@ -50,7 +50,7 @@ export abstract class BaseBuilder {
       logger.error(`Command failed: ${command}`);
       logger.error(`Exit code: ${error.status}`);
       logger.error(`Error: ${error.message}`);
-      
+
       // Show command output if available
       if (error.stdout) {
         logger.error(`Stdout:\n${error.stdout.toString()}`);
@@ -58,7 +58,7 @@ export abstract class BaseBuilder {
       if (error.stderr) {
         logger.error(`Stderr:\n${error.stderr.toString()}`);
       }
-      
+
       throw error;
     }
   }
@@ -70,6 +70,7 @@ export abstract class BaseBuilder {
     // Set GOPATH to our project directory to work with mise
     const projectGoPath = path.join(process.cwd(), "go");
     env.GOPATH = projectGoPath;
+    env.PATH = `${projectGoPath}/bin:${process.env.PATH}`;
 
     switch (platform.arch) {
       case "arm64":
@@ -152,7 +153,7 @@ export abstract class BaseBuilder {
         // Try bin directory first, then build directory
         const binPath = path.join(this.config.sourceDir, "bin", binary);
         const buildPath = path.join(this.config.sourceDir, "build", binary);
-        
+
         try {
           const { access } = await import("fs/promises");
           await access(binPath);
@@ -161,7 +162,7 @@ export abstract class BaseBuilder {
           sourcePath = buildPath;
         }
       }
-      
+
       const destPath = path.join(absoluteOutputDir, binary);
 
       try {
