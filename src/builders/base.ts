@@ -148,7 +148,9 @@ export abstract class BaseBuilder {
       // The datadog-agent binary is in bin/agent/, others might be in bin/ or other locations
       let sourcePath: string;
       if (binary.startsWith("datadog-agent")) {
-        sourcePath = path.join(this.config.sourceDir, "bin", "agent", "agent");
+        // On Windows, the source binary is agent.exe, on others it's agent
+        const sourceFileName = this.config.platform.os === "windows" ? "agent.exe" : "agent";
+        sourcePath = path.join(this.config.sourceDir, "bin", "agent", sourceFileName);
       } else {
         // Try bin directory first, then build directory
         const binPath = path.join(this.config.sourceDir, "bin", binary);
