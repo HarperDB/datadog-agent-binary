@@ -70,7 +70,7 @@ export abstract class BaseBuilder {
     // Set GOPATH to our project directory to work with mise
     const projectGoPath = path.join(process.cwd(), "go");
     env.GOPATH = projectGoPath;
-    env.PATH = `${projectGoPath}/bin:${process.env.PATH}`;
+    env.PATH = `${projectGoPath}/bin${path.delimiter}${process.env.PATH}`;
 
     switch (platform.arch) {
       case "arm64":
