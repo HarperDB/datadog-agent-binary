@@ -1,15 +1,10 @@
 # Datadog Agent Binary Builder
 
-A TypeScript package that provides pre-built Datadog Agent binaries and tools to build from source for Linux, Windows, and macOS on both arm64 and amd64 architectures.
+[![Datadog Agent Binaries](https://github.com/HarperDB/datadog-agent-binary/actions/workflows/build-release.yml/badge.svg)](https://github.com/HarperDB/datadog-agent-binary/actions/workflows/build-release.yml)
 
-## Features
+An NPM package that provides pre-built Datadog Agent binaries.
 
-- 🚀 **Pre-built binaries**: Automatically installs the appropriate binary for your platform
-- 🏗️ **Cross-platform support**: Linux, Windows, macOS (x64, arm64)
-- 📦 **Source building**: Build from source when needed
-- 🛠️ **Build dependency validation**: Checks for required tools
-- 📋 **CLI interface**: Easy-to-use command line tools
-- 🎯 **TypeScript**: Full type safety and modern tooling
+Additionally this repo provides tools to build from source for Linux, Windows, and macOS on both arm64 and amd64 architectures (or at least the working subset of those).
 
 ## Installation
 
@@ -23,7 +18,7 @@ Or install globally:
 npm install -g @harperdb/datadog-agent-binary
 ```
 
-When you install this package, it automatically downloads the appropriate pre-built Datadog Agent binary for your platform. If a pre-built binary isn't available, you can build from source.
+When you install this package, it automatically downloads the appropriate pre-built Datadog Agent binary for your platform.
 
 ## Usage
 
@@ -50,16 +45,8 @@ If you need to build from source or want to build for multiple platforms:
 # Build for current platform
 datadog-agent-build build
 
-# Build for specific platform
-datadog-agent-build build --platform linux-x64
-datadog-agent-build build --platform darwin-arm64
-datadog-agent-build build --platform windows-x64
-
-# Build for all supported platforms
-datadog-agent-build build --all
-
 # Specify version and output directory
-datadog-agent-build build --version 7.50.0 --output ./dist
+datadog-agent-build build --version 7.50.0 --output ~/my-datadog-agent-build
 ```
 
 ### Management Commands
@@ -93,21 +80,6 @@ const result = await builder.buildForCurrentPlatform({
   version: '7.50.0',
   outputDir: './build'
 });
-
-// Build for specific platform
-const result = await builder.buildForPlatform(
-  { os: 'linux', arch: 'x64' },
-  {
-    version: '7.50.0',
-    outputDir: './build/linux-x64'
-  }
-);
-
-// Build for all platforms
-const results = await builder.buildForAllPlatforms({
-  version: '7.50.0',
-  outputDir: './build'
-});
 ```
 
 ## Supported Platforms
@@ -115,30 +87,36 @@ const results = await builder.buildForAllPlatforms({
 | OS | Architecture | Status |
 |----|-------------|--------|
 | Linux | x64 | ✅ |
-| Linux | arm64 | ✅ |
+| Linux | arm64 | ❓ |
 | Windows | x64 | ✅ |
-| Windows | arm64 | ✅ |
+| Windows | arm64 | 🚫 |
 | macOS | x64 | ✅ |
 | macOS | arm64 | ✅ |
 
 ## Build Requirements
 
 ### Linux
-- Go 1.19+
+- Go 1.23
+- Node 22+
+- Python 3.12
 - GCC
-- Make
+- CMake
 - Git
 
 ### macOS
-- Go 1.19+
+- Go 1.23
+- Node 22+
+- Python 3.12
 - Xcode Command Line Tools
-- Make
+- CMake
 - Git
 
 ### Windows
-- Go 1.19+
+- Go 1.23
+- Node 22+
+- Python 3.12
 - MinGW-w64 GCC
-- Make
+- CMake
 - Git
 
 ## API Reference
@@ -150,8 +128,6 @@ Main class for building Datadog Agent binaries.
 #### Methods
 
 - `buildForCurrentPlatform(options?)`: Build for the current platform
-- `buildForPlatform(platform, options?)`: Build for a specific platform
-- `buildForAllPlatforms(options?)`: Build for all supported platforms
 
 #### Options
 
@@ -177,8 +153,6 @@ const allPlatforms = getAllSupportedPlatforms();
 
 1. **Pre-built Binaries**: When you install this package, it automatically downloads the appropriate Datadog Agent binary for your platform from GitHub releases.
 
-2. **Automatic Fallback**: If a pre-built binary isn't available for your platform, the package can build from source.
-
 3. **Release Process**:
    - GitHub Actions builds binaries for all platforms from Datadog Agent source
    - Binaries are packaged and uploaded to GitHub releases
@@ -197,9 +171,11 @@ npm run build
 npm run typecheck
 
 # Build a single platform for testing
-npm run build-platform linux x64
+npm run build-platform
 ```
 
 ## License
 
-MIT
+Apache License 2.0
+
+The binaries this package downloads, builds, and distributes are licensed and distributed under the Apache License 2.0 as specified in the [Datadog Agent repository](https://github.com/DataDog/datadog-agent). The datadog-agent source code is copyrighted by Datadog, Inc.
