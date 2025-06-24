@@ -1,6 +1,6 @@
 {
   "name": "@harperdb/datadog-agent-binary",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript package to download and build Datadog Agent from source for multiple platforms",
   "main": "dist/index.js",
   "bin": {
