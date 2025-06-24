@@ -25,7 +25,7 @@ jobs:
             platform: linux-x64
           # Disable Linux ARM64 builds until this is fixed:
           # https://github.com/DataDog/datadog-agent/issues/38088
-          - os: linux-arm-22-2
+          - os: linux-arm-24-2
             platform: linux-arm64
 
           # macOS builds
