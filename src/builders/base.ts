@@ -136,44 +136,24 @@ export abstract class BaseBuilder {
 
     await mkdir(absoluteOutputDir, { recursive: true });
 
-    // List of binaries to copy
-    const binaries = [
-      this.getOutputBinaryName(),
-      "process-agent" + (this.config.platform.os === "windows" ? ".exe" : ""),
-      "trace-agent" + (this.config.platform.os === "windows" ? ".exe" : ""),
-      "system-probe" + (this.config.platform.os === "windows" ? ".exe" : ""),
-    ];
+    // On Windows, the source binary is agent.exe, on others it's agent
+    const sourceFileName =
+      this.config.platform.os === "windows" ? "agent.exe" : "agent";
+    const sourcePath = path.join(
+      this.config.sourceDir,
+      "bin",
+      "agent",
+      sourceFileName,
+    );
 
-    for (const binary of binaries) {
-      // The datadog-agent binary is in bin/agent/, others might be in bin/ or other locations
-      let sourcePath: string;
-      if (binary.startsWith("datadog-agent")) {
-        // On Windows, the source binary is agent.exe, on others it's agent
-        const sourceFileName = this.config.platform.os === "windows" ? "agent.exe" : "agent";
-        sourcePath = path.join(this.config.sourceDir, "bin", "agent", sourceFileName);
-      } else {
-        // Try bin directory first, then build directory
-        const binPath = path.join(this.config.sourceDir, "bin", binary);
-        const buildPath = path.join(this.config.sourceDir, "build", binary);
+    const destPath = path.join(absoluteOutputDir, sourceFileName);
 
-        try {
-          const { access } = await import("fs/promises");
-          await access(binPath);
-          sourcePath = binPath;
-        } catch {
-          sourcePath = buildPath;
-        }
-      }
-
-      const destPath = path.join(absoluteOutputDir, binary);
-
-      try {
-        await copyFile(sourcePath, destPath);
-        logger.debug(`Copied ${binary} to output directory`);
-      } catch (error: any) {
-        logger.debug(`Failed to copy ${binary}: ${error.message}`);
-        // Don't fail the build if some binaries don't exist
-      }
+    try {
+      await copyFile(sourcePath, destPath);
+      logger.debug(`Copied ${sourceFileName} to output directory`);
+    } catch (error: any) {
+      logger.debug(`Failed to copy ${sourceFileName}: ${error.message}`);
+      throw error;
     }
   }
 }
