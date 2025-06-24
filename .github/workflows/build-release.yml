@@ -134,7 +134,7 @@ jobs:
       - name: Upload ${{ matrix.platform }} artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-binaries
+          name: ${{ matrix.platform }}
           path: build/${{ matrix.platform }}/
           retention-days: 90
 
@@ -162,8 +162,8 @@ jobs:
 
           # Linux platforms
           for arch in x64 arm64; do
-            if [ -d "linux-${arch}-binaries" ]; then
-              cd "linux-${arch}-binaries"
+            if [ -d "linux-${arch}" ]; then
+              cd "linux-${arch}"
               tar -czf "../../release-assets/datadog-agent-${{ github.ref_name }}-linux-${arch}.tar.gz" *
               cd ..
             fi
@@ -171,8 +171,8 @@ jobs:
 
           # macOS platforms
           for arch in x64 arm64; do
-            if [ -d "darwin-${arch}-binaries" ]; then
-              cd "darwin-${arch}-binaries"
+            if [ -d "darwin-${arch}" ]; then
+              cd "darwin-${arch}"
               tar -czf "../../release-assets/datadog-agent-${{ github.ref_name }}-darwin-${arch}.tar.gz" *
               cd ..
             fi
@@ -180,8 +180,8 @@ jobs:
 
           # Windows platforms
           for arch in x64 arm64; do
-            if [ -d "windows-${arch}-binaries" ]; then
-              cd "windows-${arch}-binaries"
+            if [ -d "windows-${arch}" ]; then
+              cd "windows-${arch}"
               zip -r "../../release-assets/datadog-agent-${{ github.ref_name }}-windows-${arch}.zip" *
               cd ..
             fi
@@ -232,6 +232,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: build/
+
+      - name: List binaries
+        run: ls -lR build/
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
