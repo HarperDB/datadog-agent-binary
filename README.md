@@ -87,9 +87,9 @@ const result = await builder.buildForCurrentPlatform({
 | OS | Architecture | Status |
 |----|-------------|--------|
 | Linux | x64 | ✅ |
-| Linux | arm64 | ❓ |
+| Linux | arm64 | ✅ |
 | Windows | x64 | ✅ |
-| Windows | arm64 | 🚫 |
+| Windows | arm64 | 🚫 | (needs arm64 support in Chocolatey)
 | macOS | x64 | ✅ |
 | macOS | arm64 | ✅ |
 
