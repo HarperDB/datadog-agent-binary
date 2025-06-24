@@ -99,7 +99,7 @@ Windows arm64 support is blocked by [Chocolatey](https://chocolatey.org) not sup
 
 ### Linux
 - Go 1.23
-- Node 22+
+- Node 18+
 - Python 3.12
 - GCC
 - CMake
@@ -107,7 +107,7 @@ Windows arm64 support is blocked by [Chocolatey](https://chocolatey.org) not sup
 
 ### macOS
 - Go 1.23
-- Node 22+
+- Node 18+
 - Python 3.12
 - Xcode Command Line Tools
 - CMake
@@ -115,7 +115,7 @@ Windows arm64 support is blocked by [Chocolatey](https://chocolatey.org) not sup
 
 ### Windows
 - Go 1.23
-- Node 22+
+- Node 18+
 - Python 3.12
 - MinGW-w64 GCC
 - CMake
