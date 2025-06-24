@@ -14,57 +14,26 @@ export interface BinaryInfo {
 }
 
 export class BinaryManager {
+  private readonly buildDir: string;
   private readonly binDir: string;
 
   constructor() {
+    this.buildDir = path.join(__dirname, "..", "build");
     this.binDir = path.join(__dirname, "..", "bin");
   }
 
   async ensureBinary(version?: string): Promise<string> {
     const platform = detectPlatform();
 
-    // First try to use optional dependency package
-    const optionalBinaryPath = await this.tryOptionalDependency(platform);
-    if (optionalBinaryPath) {
-      return optionalBinaryPath;
-    }
-
-    // Fallback to download/build
     const targetVersion = version || (await this.getLatestVersion());
     const binaryPath = await this.getBinaryPath(platform, targetVersion);
 
     if (await this.binaryExists(binaryPath)) {
-      logger.debug(`Binary already exists: ${binaryPath}`);
+      logger.debug(`Found platform binary: ${binaryPath}`);
       return binaryPath;
     }
 
-    logger.info(
-      `Downloading Datadog Agent binary for ${getPlatformString(platform)}...`,
-    );
-    return await this.downloadBinary(platform, targetVersion);
-  }
-
-  private async tryOptionalDependency(
-    platform: Platform,
-  ): Promise<string | null> {
-    try {
-      const platformString = getPlatformString(platform);
-      const packageName = `@datadog-agent-binary/${platformString}`;
-
-      // Try to require the optional dependency
-      const binaryPackage = require(packageName);
-      const binaryPath = binaryPackage.getBinaryPath();
-
-      if (await this.binaryExists(binaryPath)) {
-        logger.info(`Using platform-specific binary package: ${packageName}`);
-        return binaryPath;
-      }
-    } catch (error) {
-      // Optional dependency not available, continue with fallback
-      logger.debug(`Optional dependency not available: ${error}`);
-    }
-
-    return null;
+    throw new Error(`Binary not found for ${getPlatformString(platform)}`);
   }
 
   private async getBinaryPath(
@@ -73,7 +42,7 @@ export class BinaryManager {
   ): Promise<string> {
     const fileName = this.getBinaryFileName(platform);
     return path.join(
-      this.binDir,
+      this.buildDir,
       `${version}-${getPlatformString(platform)}`,
       fileName,
     );
@@ -103,71 +72,6 @@ export class BinaryManager {
 
     const data = (await response.json()) as { tag_name: string };
     return data.tag_name;
-  }
-
-  private async downloadBinary(
-    platform: Platform,
-    version: string,
-  ): Promise<string> {
-    const binaryInfo = await this.getBinaryInfo(platform, version);
-    const platformDir = path.join(
-      this.binDir,
-      `${version}-${getPlatformString(platform)}`,
-    );
-
-    await fs.mkdir(platformDir, { recursive: true });
-
-    logger.info(`Downloading from: ${binaryInfo.downloadUrl}`);
-
-    const response = await fetch(binaryInfo.downloadUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to download binary: ${response.statusText}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const tarPath = path.join(platformDir, binaryInfo.fileName);
-    await fs.writeFile(tarPath, buffer);
-
-    // Extract the tarball
-    const tar = await import("tar");
-    await tar.extract({
-      file: tarPath,
-      cwd: platformDir,
-      strip: 1,
-    });
-
-    // Remove the tarball
-    await fs.unlink(tarPath);
-
-    // Find the main binary
-    const binaryPath = await this.getBinaryPath(platform, version);
-
-    // Make executable on Unix systems
-    if (platform.os !== "windows") {
-      await fs.chmod(binaryPath, 0o755);
-    }
-
-    logger.info(`Binary installed: ${binaryPath}`);
-    return binaryPath;
-  }
-
-  private async getBinaryInfo(
-    platform: Platform,
-    version: string,
-  ): Promise<BinaryInfo> {
-    const platformString = getPlatformString(platform);
-    const fileName = `datadog-agent-${version}-${platformString}.tar.gz`;
-
-    // Download from this package's GitHub releases
-    const downloadUrl = `https://github.com/HarperDB/datadog-agent-binary/releases/download/v${version}/${fileName}`;
-
-    return {
-      version,
-      platform,
-      downloadUrl,
-      fileName,
-    };
   }
 
   async createBinaryWrapper(): Promise<void> {
@@ -237,7 +141,6 @@ node "%~dp0\\..\\dist\\binary-manager.js" %*
       logger.info("Installation completed successfully");
     } catch (error: any) {
       logger.error(`Installation failed: ${error.message}`);
-      logger.warn("Falling back to build-from-source mode");
       throw error;
     }
   }
