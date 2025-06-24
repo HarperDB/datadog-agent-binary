@@ -209,8 +209,9 @@ jobs:
             ## Supported Platforms
 
             - **Linux x64**: `datadog-agent-${{ github.ref_name }}-linux-x64.tar.gz`
+            - **Linux arm64**: `datadog-agent-${{ github.ref_name }}-linux-arm64.tar.gz`
             - **macOS x64**: `datadog-agent-${{ github.ref_name }}-darwin-x64.tar.gz`
-            - **macOS ARM64**: `datadog-agent-${{ github.ref_name }}-darwin-arm64.tar.gz`
+            - **macOS arm64**: `datadog-agent-${{ github.ref_name }}-darwin-arm64.tar.gz`
             - **Windows x64**: `datadog-agent-${{ github.ref_name }}-windows-x64.zip`
 
             ## NPM Package
