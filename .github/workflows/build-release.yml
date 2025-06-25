@@ -255,7 +255,55 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
-      - name: Publish to npm
+      - name: Extract package version from tag
+        id: extract_package_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update package versions
+        run: |
+          # Update main package version (this automatically runs the version script hook)
+          npm version ${{ steps.extract_package_version.outputs.version }} --no-git-tag-version
+
+      - name: Prepare platform packages with binaries
+        run: |
+          # Copy binaries to each platform package
+          for platform_dir in npm/*/; do
+            platform=$(basename "$platform_dir")
+            echo "Processing platform: $platform"
+            
+            if [ -d "build/$platform" ]; then
+              mkdir -p "$platform_dir/bin"
+              cp build/$platform/* "$platform_dir/bin/"
+              echo "Copied binaries for $platform"
+            else
+              echo "Warning: No binaries found for $platform"
+            fi
+          done
+
+      - name: Publish platform packages
+        run: |
+          for platform_dir in npm/*/; do
+            platform=$(basename "$platform_dir")
+            echo "Publishing platform package: $platform"
+            
+            cd "$platform_dir"
+            
+            # Check if binaries exist
+            if [ -d "bin" ] && [ "$(ls -A bin)" ]; then
+              npm publish --access public
+              echo "Published @harperdb/datadog-agent-binary-$platform"
+            else
+              echo "Skipping $platform - no binaries found"
+            fi
+            
+            cd - > /dev/null
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish main package
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

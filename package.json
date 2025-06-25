@@ -1,60 +1,80 @@
 {
-  "name": "@harperdb/datadog-agent-binary",
-  "version": "0.1.1",
-  "description": "TypeScript package to download and build Datadog Agent from source for multiple platforms",
-  "main": "dist/index.js",
-  "bin": {
-    "datadog-agent-build": "dist/cli.js",
-    "datadog-agent": "bin/datadog-agent"
-  },
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "start": "node dist/cli.js",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist/ build/ release/ source/ go/",
-    "build-all": "npm run build && node dist/cli.js build --all",
-    "build-platform": "npm run build && node dist/cli.js build",
-    "prepublishOnly": "npm run build",
-    "test-build": "npx tsx test-build.ts"
-  },
-  "keywords": [
-    "datadog",
-    "agent",
-    "build",
-    "cross-platform"
-  ],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "chalk": "^5.3.0",
-    "commander": "^11.1.0",
-    "node-fetch": "^3.3.2",
-    "tar": "^6.2.0",
-    "yauzl": "^2.10.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@types/tar": "^6.1.10",
-    "@types/yauzl": "^2.10.3",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.0"
-  },
-  "files": [
-    "build/",
-    "dist/",
-    "bin/",
-    "README.md"
-  ],
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/HarperDB/datadog-agent-binary.git"
-  },
-  "bugs": {
-    "url": "https://github.com/HarperDB/datadog-agent-binary/issues"
-  },
-  "homepage": "https://github.com/HarperDB/datadog-agent-binary#readme"
+	"name": "@harperdb/datadog-agent-binary",
+	"version": "0.0.1",
+	"description": "TypeScript package to download and build Datadog Agent from source for multiple platforms",
+	"main": "dist/index.js",
+	"bin": {
+		"datadog-agent-build": "dist/cli.js",
+		"datadog-agent": "bin/datadog-agent"
+	},
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch",
+		"start": "node dist/cli.js",
+		"typecheck": "tsc --noEmit",
+		"clean": "rm -rf dist/ build/ release/ source/ go/ npm/",
+		"build-all": "npm run build && node dist/cli.js build --all",
+		"build-platform": "npm run build && node dist/cli.js build",
+		"prepare-platform-packages": "node scripts/create-platform-packages.js",
+		"update-optional-deps": "node scripts/update-optional-deps.js",
+		"lint": "prettier --write .",
+		"lint:check": "prettier --check .",
+		"prepare": "husky",
+		"version": "npm run build && npm run prepare-platform-packages && npm run update-optional-deps",
+		"prepublishOnly": "npm run build",
+		"test-build": "npx tsx test-build.ts"
+	},
+	"keywords": [
+		"datadog",
+		"agent",
+		"build",
+		"cross-platform"
+	],
+	"author": "",
+	"license": "MIT",
+	"dependencies": {
+		"chalk": "^5.3.0",
+		"commander": "^11.1.0",
+		"node-fetch": "^3.3.2",
+		"tar": "^6.2.0",
+		"yauzl": "^2.10.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.10.0",
+		"@types/tar": "^6.1.10",
+		"@types/yauzl": "^2.10.3",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.1.2",
+		"prettier": "^3.6.1",
+		"tsx": "^4.7.0",
+		"typescript": "^5.3.0"
+	},
+	"files": [
+		"dist/",
+		"bin/",
+		"README.md"
+	],
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/HarperDB/datadog-agent-binary.git"
+	},
+	"bugs": {
+		"url": "https://github.com/HarperDB/datadog-agent-binary/issues"
+	},
+	"homepage": "https://github.com/HarperDB/datadog-agent-binary#readme",
+	"optionalDependencies": {
+		"@harperdb/datadog-agent-binary-linux-x64": "0.0.1",
+		"@harperdb/datadog-agent-binary-linux-arm64": "0.0.1",
+		"@harperdb/datadog-agent-binary-darwin-x64": "0.0.1",
+		"@harperdb/datadog-agent-binary-darwin-arm64": "0.0.1",
+		"@harperdb/datadog-agent-binary-windows-x64": "0.0.1"
+	},
+	"lint-staged": {
+		"*.{ts,js,json}": [
+			"prettier --check"
+		]
+	}
 }

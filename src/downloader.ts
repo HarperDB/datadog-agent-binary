@@ -9,126 +9,126 @@ const DATADOG_AGENT_REPO = "https://github.com/DataDog/datadog-agent";
 const GITHUB_API_BASE = "https://api.github.com/repos/DataDog/datadog-agent";
 
 export class DatadogAgentDownloader {
-  async getLatestVersion(): Promise<string> {
-    logger.info("Fetching latest Datadog Agent version...");
+	async getLatestVersion(): Promise<string> {
+		logger.info("Fetching latest Datadog Agent version...");
 
-    const response = await fetch(`${GITHUB_API_BASE}/releases/latest`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch latest version: ${response.statusText}`);
-    }
+		const response = await fetch(`${GITHUB_API_BASE}/releases/latest`);
+		if (!response.ok) {
+			throw new Error(`Failed to fetch latest version: ${response.statusText}`);
+		}
 
-    const data = (await response.json()) as { tag_name: string };
-    const version = data.tag_name;
+		const data = (await response.json()) as { tag_name: string };
+		const version = data.tag_name;
 
-    return version;
-  }
+		return version;
+	}
 
-  async downloadSource(config: DownloadConfig): Promise<string> {
-    const { version, extractTo } = config;
+	async downloadSource(config: DownloadConfig): Promise<string> {
+		const { version, extractTo } = config;
 
-    logger.info(`Downloading Datadog Agent source version ${version}...`);
+		logger.info(`Downloading Datadog Agent source version ${version}...`);
 
-    await fs.mkdir(path.dirname(extractTo), { recursive: true });
+		await fs.mkdir(path.dirname(extractTo), { recursive: true });
 
-    const extractPath = extractTo;
+		const extractPath = extractTo;
 
-    // Remove existing source directory if it exists
-    await fs.rm(extractPath, { recursive: true, force: true });
+		// Remove existing source directory if it exists
+		await fs.rm(extractPath, { recursive: true, force: true });
 
-    // Clone the repository instead of downloading tarball to preserve git history
-    logger.info("Cloning Datadog Agent repository...");
+		// Clone the repository instead of downloading tarball to preserve git history
+		logger.info("Cloning Datadog Agent repository...");
 
-    const { execSync } = await import("child_process");
+		const { execSync } = await import("child_process");
 
-    try {
-      // Clone with specific tag
-      execSync(
-        `git clone --depth 1 --branch ${version} ${DATADOG_AGENT_REPO} "${extractPath}"`,
-        {
-          stdio: ["inherit", "pipe", "inherit"],
-        },
-      );
+		try {
+			// Clone with specific tag
+			execSync(
+				`git clone --depth 1 --branch ${version} ${DATADOG_AGENT_REPO} "${extractPath}"`,
+				{
+					stdio: ["inherit", "pipe", "inherit"],
+				}
+			);
 
-      // Ensure we have the correct version information
-      const gitOutput = execSync(
-        `git -C "${extractPath}" describe --tags --always`,
-        { encoding: "utf8", stdio: ["inherit", "pipe", "inherit"] },
-      );
-      logger.info(`Repository cloned at version: ${gitOutput.trim()}`);
-    } catch (error) {
-      // Fallback to tarball download if git clone fails
-      logger.warn("Git clone failed, falling back to tarball download...");
+			// Ensure we have the correct version information
+			const gitOutput = execSync(
+				`git -C "${extractPath}" describe --tags --always`,
+				{ encoding: "utf8", stdio: ["inherit", "pipe", "inherit"] }
+			);
+			logger.info(`Repository cloned at version: ${gitOutput.trim()}`);
+		} catch (error) {
+			// Fallback to tarball download if git clone fails
+			logger.warn("Git clone failed, falling back to tarball download...");
 
-      const tarballUrl = `${DATADOG_AGENT_REPO}/archive/refs/tags/${version}.tar.gz`;
-      const tarballPath = path.join(
-        path.dirname(extractTo),
-        `datadog-agent-${version}.tar.gz`,
-      );
+			const tarballUrl = `${DATADOG_AGENT_REPO}/archive/refs/tags/${version}.tar.gz`;
+			const tarballPath = path.join(
+				path.dirname(extractTo),
+				`datadog-agent-${version}.tar.gz`
+			);
 
-      logger.debug(`Downloading from: ${tarballUrl}`);
+			logger.debug(`Downloading from: ${tarballUrl}`);
 
-      const response = await fetch(tarballUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to download source: ${response.statusText}`);
-      }
+			const response = await fetch(tarballUrl);
+			if (!response.ok) {
+				throw new Error(`Failed to download source: ${response.statusText}`);
+			}
 
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      await fs.writeFile(tarballPath, buffer);
+			const arrayBuffer = await response.arrayBuffer();
+			const buffer = Buffer.from(arrayBuffer);
+			await fs.writeFile(tarballPath, buffer);
 
-      logger.info("Extracting source code...");
+			logger.info("Extracting source code...");
 
-      await fs.mkdir(extractPath, { recursive: true });
+			await fs.mkdir(extractPath, { recursive: true });
 
-      await tar.extract({
-        file: tarballPath,
-        cwd: extractPath,
-        strip: 1,
-      });
+			await tar.extract({
+				file: tarballPath,
+				cwd: extractPath,
+				strip: 1,
+			});
 
-      await fs.unlink(tarballPath);
+			await fs.unlink(tarballPath);
 
-      // Initialize git repo and set version manually for ldflags
-      try {
-        execSync(`git -C "${extractPath}" init`, { stdio: "ignore" });
-        execSync(`git -C "${extractPath}" tag ${version}`, { stdio: "ignore" });
-      } catch {
-        // Ignore git errors, version will be set via environment
-      }
-    }
+			// Initialize git repo and set version manually for ldflags
+			try {
+				execSync(`git -C "${extractPath}" init`, { stdio: "ignore" });
+				execSync(`git -C "${extractPath}" tag ${version}`, { stdio: "ignore" });
+			} catch {
+				// Ignore git errors, version will be set via environment
+			}
+		}
 
-    logger.info(`Source extracted to: ${extractPath}`);
-    return extractPath;
-  }
+		logger.info(`Source extracted to: ${extractPath}`);
+		return extractPath;
+	}
 
-  async checkBuildDependencies(platform: Platform): Promise<void> {
-    logger.info(
-      `Checking build dependencies for ${platform.os}-${platform.arch}...`,
-    );
+	async checkBuildDependencies(platform: Platform): Promise<void> {
+		logger.info(
+			`Checking build dependencies for ${platform.os}-${platform.arch}...`
+		);
 
-    const requirements: Record<string, string[]> = {
-      linux: ["go", "make", "gcc", "git"],
-      darwin: ["go", "make", "gcc", "git", "xcode-select"],
-      windows: ["go", "make", "gcc", "git"],
-    };
+		const requirements: Record<string, string[]> = {
+			linux: ["go", "make", "gcc", "git"],
+			darwin: ["go", "make", "gcc", "git", "xcode-select"],
+			windows: ["go", "make", "gcc", "git"],
+		};
 
-    const platformRequirements = requirements[platform.os] || [];
-    const missing: string[] = [];
+		const platformRequirements = requirements[platform.os] || [];
+		const missing: string[] = [];
 
-    for (const tool of platformRequirements) {
-      try {
-        const { execSync } = await import("child_process");
-        execSync(`which ${tool}`, { stdio: "ignore" });
-      } catch {
-        missing.push(tool);
-      }
-    }
+		for (const tool of platformRequirements) {
+			try {
+				const { execSync } = await import("child_process");
+				execSync(`which ${tool}`, { stdio: "ignore" });
+			} catch {
+				missing.push(tool);
+			}
+		}
 
-    if (missing.length > 0) {
-      logger.warn(`Missing build dependencies: ${missing.join(", ")}`);
-      logger.warn("Please install missing dependencies before building");
-    } else {
-      logger.info("All build dependencies satisfied");
-    }
-  }
+		if (missing.length > 0) {
+			logger.warn(`Missing build dependencies: ${missing.join(", ")}`);
+			logger.warn("Please install missing dependencies before building");
+		} else {
+			logger.info("All build dependencies satisfied");
+		}
+	}
 }

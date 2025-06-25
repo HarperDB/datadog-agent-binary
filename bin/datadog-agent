@@ -1,33 +1,32 @@
 #!/usr/bin/env node
 
-const { BinaryManager } = require('../dist/binary-manager.js');
-const { spawn } = require('child_process');
-const { logger } = require('../dist/logger.js');
+const { BinaryManager } = require("../dist/binary-manager.js");
+const { spawn } = require("child_process");
+const { logger } = require("../dist/logger.js");
 
 async function main() {
-  try {
-    const manager = new BinaryManager();
-    const binaryPath = await manager.ensureBinary();
-    
-    const child = spawn(binaryPath, process.argv.slice(2), {
-      stdio: 'inherit',
-      env: process.env
-    });
-    
-    child.on('exit', (code) => {
-      process.exit(code || 0);
-    });
-    
-    child.on('error', (error) => {
-      logger.error(`Failed to execute datadog-agent: ${error.message}`);
-      process.exit(1);
-    });
-    
-  } catch (error) {
-    logger.error(`Failed to run datadog-agent: ${error.message}`);
-    logger.info('You can build from source using: datadog-agent-build build');
-    process.exit(1);
-  }
+	try {
+		const manager = new BinaryManager();
+		const binaryPath = await manager.ensureBinary();
+
+		const child = spawn(binaryPath, process.argv.slice(2), {
+			stdio: "inherit",
+			env: process.env,
+		});
+
+		child.on("exit", (code) => {
+			process.exit(code || 0);
+		});
+
+		child.on("error", (error) => {
+			logger.error(`Failed to execute datadog-agent: ${error.message}`);
+			process.exit(1);
+		});
+	} catch (error) {
+		logger.error(`Failed to run datadog-agent: ${error.message}`);
+		logger.info("You can build from source using: datadog-agent-build build");
+		process.exit(1);
+	}
 }
 
 main();
