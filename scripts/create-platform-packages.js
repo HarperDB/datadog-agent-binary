@@ -25,9 +25,13 @@ function getPackageDir(platform) {
 	return path.join(__dirname, "..", "npm", platformName);
 }
 
+function createPackageDir(platform) {
+	const packageDir = getPackageDir(platform);
+	fs.mkdirSync(packageDir, { recursive: true });
+}
+
 function copyPlatformBinary(platform) {
 	const packageDir = getPackageDir(platform);
-
 	fs.mkdirSync(path.join(packageDir, "bin"), { recursive: true });
 
 	const binaryName = platform.getBinaryName();
@@ -48,10 +52,18 @@ function copyPlatformBinary(platform) {
 const version = getParentVersion();
 
 let platforms;
-if (argv[1] === "--all") {
-	platforms = getSupportedPlatforms();
-} else {
-	platforms = [getCurrentPlatform()];
+let createDummyPackages = false;
+const lastArg = argv[argv.length - 1];
+switch (lastArg) {
+	case "--all":
+		platforms = getSupportedPlatforms();
+		break;
+	case "--dummy":
+		platforms = getSupportedPlatforms();
+		createDummyPackages = true;
+		break;
+	default:
+		platforms = [getCurrentPlatform()];
 }
 
 const packageTemplate = {
@@ -106,7 +118,10 @@ function writePlatformIndexJs(platform) {
 }
 
 platforms.forEach((platform) => {
-	copyPlatformBinary(platform);
+	createPackageDir(platform);
+	if (!createDummyPackages) {
+		copyPlatformBinary(platform);
+	}
 	const packageJson = writePlatformPackageJson(platform);
 	writePlatformIndexJs(platform);
 	console.log(`Created package: ${packageJson.name}`);
