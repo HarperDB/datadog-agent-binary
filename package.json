@@ -18,7 +18,7 @@
 		"prepare-platform-packages": "node scripts/create-platform-packages.js",
 		"update-optional-deps": "node scripts/update-optional-deps.js",
 		"lint": "prettier --write .",
-		"lint:check": "prettier --check --log-level debug .",
+		"lint:check": "prettier --check .",
 		"prepare": "husky",
 		"version": "npm run build && npm run update-optional-deps",
 		"prepublishOnly": "npm run build",

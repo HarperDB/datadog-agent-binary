@@ -18,6 +18,9 @@ platforms.forEach((platform) => {
 	] = packageJson.version;
 });
 
-fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
+fs.writeFileSync(
+	packageJsonPath,
+	JSON.stringify(packageJson, null, "\t") + "\n"
+);
 
 console.log(`Updated optionalDependencies to version ${packageJson.version}`);
