@@ -232,17 +232,10 @@ export abstract class BaseBuilder {
 		const { copyFile, mkdir } = await import("fs/promises");
 
 		// Create platform-specific bin directory
-		const { platform } = this.config;
-		const platformName = platform.getName();
-		const platformBinDir = path.join(
-			process.cwd(),
-			"build",
-			platformName,
-			"bin"
-		);
+		const { platform, outputDir } = this.config;
 
-		logger.debug(`Ensuring platform bin directory exists: ${platformBinDir}`);
-		await mkdir(platformBinDir, { recursive: true });
+		logger.debug(`Ensuring platform bin directory exists: ${outputDir}`);
+		await mkdir(outputDir, { recursive: true });
 
 		const sourceFileName = this.getBuildBinaryName();
 		const sourcePath = path.join(
@@ -253,7 +246,7 @@ export abstract class BaseBuilder {
 		);
 
 		const outputBinaryName = this.getOutputBinaryName();
-		const destPath = path.join(platformBinDir, outputBinaryName);
+		const destPath = path.join(outputDir, outputBinaryName);
 
 		try {
 			await copyFile(sourcePath, destPath);

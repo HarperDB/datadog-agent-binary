@@ -31,7 +31,11 @@ program
 
 			logger.info("Building for current platform...");
 			const currentPlatform = Platform.current();
-			const outputDir = path.join(options.output, currentPlatform.getName());
+			const outputDir = path.join(
+				options.output,
+				currentPlatform.getName(),
+				"bin"
+			);
 			result = await builder.buildForCurrentPlatform({
 				version: options.datadogVersion,
 				outputDir,

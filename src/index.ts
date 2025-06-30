@@ -27,8 +27,7 @@ export class DatadogAgentBuilder {
 		const version =
 			options.version || (await this.downloader.getLatestVersion());
 		const platformName = platform.getName();
-		const outputDir =
-			options.outputDir || path.join(process.cwd(), "build", platformName);
+		const outputDir = options.outputDir || "./build";
 
 		// Platform-specific directories
 		const platformBuildDir = path.join(process.cwd(), "build", platformName);
