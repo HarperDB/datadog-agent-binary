@@ -63,10 +63,7 @@ jobs:
             echo "New version found: $LATEST_RELEASE"
             echo "Creating tag: v$LATEST_RELEASE"
 
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-
-            #git tag "v$LATEST_RELEASE"
-            npm version "v$LATEST_RELEASE"
+            npm version "v$LATEST_RELEASE" --no-commit-hooks
+            npm run lint:check
             git push origin "v$LATEST_RELEASE"
           fi
