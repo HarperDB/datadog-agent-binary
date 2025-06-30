@@ -14,7 +14,7 @@
 		"typecheck": "tsc --noEmit",
 		"clean": "rm -rf dist/ build/ release/ source/ go/ npm/",
 		"build-all": "npm run build && node dist/cli.js build --all",
-		"build-platform": "npm run build && node dist/cli.js build",
+		"build-agent": "npm run build && node dist/cli.js build",
 		"prepare-platform-packages": "node scripts/create-platform-packages.js",
 		"update-optional-deps": "node scripts/update-optional-deps.js",
 		"lint": "prettier --write .",
