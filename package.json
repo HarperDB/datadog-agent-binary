@@ -20,7 +20,7 @@
 		"lint": "prettier --write .",
 		"lint:check": "prettier --check --log-level debug .",
 		"prepare": "husky",
-		"version": "npm run build && npm run prepare-platform-packages && npm run update-optional-deps",
+		"version": "npm run build && npm run update-optional-deps",
 		"prepublishOnly": "npm run build",
 		"test-build": "npx tsx test-build.ts"
 	},
