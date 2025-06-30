@@ -1,7 +1,7 @@
-export interface Platform {
-	os: "linux" | "windows" | "darwin";
-	arch: "x64" | "arm64";
-}
+import { Platform } from "./platform";
+
+export type Architecture = "x86_64" | "arm64";
+export type OS = "linux" | "windows" | "macos";
 
 export interface BuildConfig {
 	platform: Platform;

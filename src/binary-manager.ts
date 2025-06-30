@@ -1,9 +1,8 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import fetch from "node-fetch";
-import { detectPlatform, getPlatformString } from "./platforms.js";
 import { logger } from "./logger.js";
-import { Platform } from "./types.js";
+import { Platform } from "./platform.js";
 
 export interface BinaryInfo {
 	version: string;
@@ -23,7 +22,7 @@ export class BinaryManager {
 	}
 
 	async ensureBinary(version?: string): Promise<string> {
-		const platform = detectPlatform();
+		const platform = Platform.current();
 
 		const targetVersion = version || (await this.getLatestVersion());
 		const binaryPath = await this.getBinaryPath(platform, targetVersion);
@@ -33,24 +32,19 @@ export class BinaryManager {
 			return binaryPath;
 		}
 
-		throw new Error(`Binary not found for ${getPlatformString(platform)}`);
+		throw new Error(`Binary not found for ${platform.getName()}`);
 	}
 
 	private async getBinaryPath(
 		platform: Platform,
 		version: string
 	): Promise<string> {
-		const fileName = this.getBinaryFileName(platform);
+		const fileName = platform.getBinaryName();
 		return path.join(
 			this.buildDir,
-			`${version}-${getPlatformString(platform)}`,
+			`${version}-${platform.getName()}`,
 			fileName
 		);
-	}
-
-	private getBinaryFileName(platform: Platform): string {
-		const baseName = "datadog-agent";
-		return platform.os === "windows" ? `${baseName}.exe` : baseName;
 	}
 
 	private async binaryExists(binaryPath: string): Promise<boolean> {
@@ -76,11 +70,11 @@ export class BinaryManager {
 
 	async createBinaryWrapper(): Promise<void> {
 		const wrapperPath = path.join(this.binDir, "datadog-agent");
-		const platform = detectPlatform();
+		const platform = Platform.current();
 
 		let wrapperContent: string;
 
-		if (platform.os === "windows") {
+		if (platform.getOS() === "windows") {
 			wrapperContent = this.createWindowsWrapper();
 			await fs.writeFile(wrapperPath + ".cmd", wrapperContent);
 		} else {
@@ -130,10 +124,8 @@ node "%~dp0\\..\\dist\\binary-manager.js" %*
 	}
 
 	async installForCurrentPlatform(): Promise<void> {
-		const platform = detectPlatform();
-		logger.info(
-			`Installing Datadog Agent binary for ${getPlatformString(platform)}...`
-		);
+		const platform = Platform.current();
+		logger.info(`Installing Datadog Agent binary for ${platform.getName()}...`);
 
 		try {
 			await this.ensureBinary();

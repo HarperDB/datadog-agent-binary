@@ -8,7 +8,7 @@ export class WindowsBuilder extends BaseBuilder {
 		const startTime = Date.now();
 		const { platform } = this.config;
 
-		logger.info(`Building Datadog Agent for Windows ${platform.arch}...`);
+		logger.info(`Building Datadog Agent for Windows ${platform.getArch()}...`);
 
 		try {
 			await this.ensureOutputDirectory();
@@ -41,6 +41,10 @@ export class WindowsBuilder extends BaseBuilder {
 				duration,
 			};
 		}
+	}
+
+	protected getBuildBinaryName(): string {
+		return "agent.exe";
 	}
 
 	protected getOutputBinaryName(): string {

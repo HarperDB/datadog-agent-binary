@@ -3,8 +3,8 @@
 import { Command } from "commander";
 import * as path from "path";
 import { DatadogAgentBuilder, BinaryManager } from "./index.js";
-import { getAllSupportedPlatforms, detectPlatform } from "./platforms.js";
 import { logger } from "./logger.js";
+import { Platform, getAllSupportedPlatforms } from "./platform.js";
 
 const program = new Command();
 
@@ -30,11 +30,8 @@ program
 			let result;
 
 			logger.info("Building for current platform...");
-			const currentPlatform = detectPlatform();
-			const outputDir = path.join(
-				options.output,
-				`${currentPlatform.os}-${currentPlatform.arch}`
-			);
+			const currentPlatform = Platform.current();
+			const outputDir = path.join(options.output, currentPlatform.getName());
 			result = await builder.buildForCurrentPlatform({
 				version: options.datadogVersion,
 				outputDir,
@@ -60,14 +57,10 @@ program
 	.description("List all supported platforms")
 	.action(() => {
 		const platforms = getAllSupportedPlatforms();
-		const current = detectPlatform();
 
 		logger.info("Supported platforms:");
 		for (const platform of platforms) {
-			const isCurrent =
-				platform.os === current.os && platform.arch === current.arch;
-			const marker = isCurrent ? " (current)" : "";
-			logger.info(`  ${platform.os}-${platform.arch}${marker}`);
+			logger.info(`  ${platform}`);
 		}
 	});
 

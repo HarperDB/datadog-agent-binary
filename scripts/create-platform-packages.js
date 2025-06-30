@@ -2,16 +2,57 @@
 
 const fs = require("fs");
 const path = require("path");
+const { argv } = require("process");
+const { SUPPORTED_PLATFORMS, Platform } = require("../dist/platform.js");
 
-// Read the main package.json to get the version
-const mainPackageJson = JSON.parse(
-	fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8")
-);
-const version = mainPackageJson.version;
+function getParentVersion() {
+	const parentPackageJson = JSON.parse(
+		fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8")
+	);
+	return parentPackageJson.version;
+}
 
-// Import platform configuration from TypeScript source
-const { SUPPORTED_PLATFORMS } = require("../dist/platforms.js");
-const platforms = SUPPORTED_PLATFORMS;
+function getSupportedPlatforms() {
+	return SUPPORTED_PLATFORMS;
+}
+
+function getCurrentPlatform() {
+	return Platform.current();
+}
+
+function getPackageDir(platform) {
+	const platformName = platform.getName();
+	return path.join(__dirname, "..", "npm", platformName);
+}
+
+function copyPlatformBinary(platform) {
+	const packageDir = getPackageDir(platform);
+
+	fs.mkdirSync(path.join(packageDir, "bin"), { recursive: true });
+
+	const binaryName = platform.getBinaryName();
+	const binaryPath = path.join(
+		__dirname,
+		"..",
+		"build",
+		platform.getName(),
+		"bin",
+		binaryName
+	);
+	if (!fs.existsSync(binaryPath)) {
+		throw new Error(`Binary not found at ${binaryPath}`);
+	}
+	fs.copyFileSync(binaryPath, path.join(packageDir, "bin", binaryName));
+}
+
+const version = getParentVersion();
+
+let platforms;
+if (argv[1] === "--all") {
+	platforms = getSupportedPlatforms();
+} else {
+	platforms = [getCurrentPlatform()];
+}
 
 const packageTemplate = {
 	version: version,
@@ -35,33 +76,39 @@ module.exports = {
   }
 };`;
 
-platforms.forEach((platform) => {
-	const platformName = platform.packageName;
-	const packageDir = path.join(__dirname, "..", "npm", platformName);
-
-	// Create directory
-	fs.mkdirSync(packageDir, { recursive: true });
-	fs.mkdirSync(path.join(packageDir, "bin"), { recursive: true });
-
-	// Create package.json
+function writePlatformPackageJson(platform) {
+	const os = platform.getOS();
+	const arch = platform.getArch();
 	const packageJson = {
 		...packageTemplate,
-		name: `@harperdb/datadog-agent-binary-${platformName}`,
-		description: `Datadog Agent binary for ${platform.os} ${platform.arch}`,
-		os: [platform.os],
-		cpu: [platform.cpu],
-		keywords: [...packageTemplate.keywords, platform.os, platform.arch],
+		name: `@harperdb/datadog-agent-binary-${platform.getName()}`,
+		description: `Datadog Agent binary for ${os} ${arch}`,
+		os: [os],
+		cpu: [arch],
+		keywords: [...packageTemplate.keywords, os, arch],
 	};
 
 	fs.writeFileSync(
-		path.join(packageDir, "package.json"),
-		JSON.stringify(packageJson, null, 2)
+		path.join(getPackageDir(platform), "package.json"),
+		JSON.stringify(packageJson, null, "\t")
 	);
 
-	// Create index.js
-	const indexContent = indexTemplate.replace("BINARY_NAME", platform.binary);
-	fs.writeFileSync(path.join(packageDir, "index.js"), indexContent);
+	return packageJson;
+}
 
+function writePlatformIndexJs(platform) {
+	const binaryName = platform.getBinaryName();
+	const indexContent = indexTemplate.replace("BINARY_NAME", binaryName);
+	fs.writeFileSync(
+		path.join(getPackageDir(platform), "index.js"),
+		indexContent
+	);
+}
+
+platforms.forEach((platform) => {
+	copyPlatformBinary(platform);
+	const packageJson = writePlatformPackageJson(platform);
+	writePlatformIndexJs(platform);
 	console.log(`Created package: ${packageJson.name}`);
 });
 

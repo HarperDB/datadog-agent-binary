@@ -3,12 +3,12 @@ import { BuildResult } from "../types.js";
 import { logger } from "../logger.js";
 import { BaseBuilder } from "./base.js";
 
-export class DarwinBuilder extends BaseBuilder {
+export class MacOSBuilder extends BaseBuilder {
 	async build(): Promise<BuildResult> {
 		const startTime = Date.now();
 		const { platform } = this.config;
 
-		logger.info(`Building Datadog Agent for macOS ${platform.arch}...`);
+		logger.info(`Building Datadog Agent for macOS ${platform.getArch()}...`);
 
 		try {
 			await this.ensureOutputDirectory();

@@ -8,7 +8,7 @@ export class LinuxBuilder extends BaseBuilder {
 		const startTime = Date.now();
 		const { platform } = this.config;
 
-		logger.info(`Building Datadog Agent for Linux ${platform.arch}...`);
+		logger.info(`Building Datadog Agent for Linux ${platform.getArch()}...`);
 
 		try {
 			await this.ensureOutputDirectory();
