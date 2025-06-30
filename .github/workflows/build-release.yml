@@ -114,9 +114,9 @@ jobs:
           DEBUG: true
         run: |
           if [ -n "${{ steps.extract_version_unix.outputs.version }}" ]; then
-            node dist/cli.js build --platform ${{ matrix.platform }} --datadog-version ${{ steps.extract_version_unix.outputs.version }}
+            node dist/cli.js build --datadog-version ${{ steps.extract_version_unix.outputs.version }}
           else
-            node dist/cli.js build --platform ${{ matrix.platform }}
+            node dist/cli.js build
           fi
 
       - name: Build ${{ matrix.platform }} (Windows)
@@ -125,9 +125,9 @@ jobs:
           DEBUG: true
         run: |
           if ("${{ steps.extract_version_windows.outputs.version }}" -ne "") {
-            node dist/cli.js build --platform ${{ matrix.platform }} --datadog-version ${{ steps.extract_version_windows.outputs.version }}
+            node dist/cli.js build --datadog-version ${{ steps.extract_version_windows.outputs.version }}
           } else {
-            node dist/cli.js build --platform ${{ matrix.platform }}
+            node dist/cli.js build
           }
         shell: pwsh
 
@@ -272,7 +272,7 @@ jobs:
           for platform_dir in npm/*/; do
             platform=$(basename "$platform_dir")
             echo "Processing platform: $platform"
-            
+
             if [ -d "build/$platform" ]; then
               mkdir -p "$platform_dir/bin"
               cp build/$platform/* "$platform_dir/bin/"
@@ -287,9 +287,9 @@ jobs:
           for platform_dir in npm/*/; do
             platform=$(basename "$platform_dir")
             echo "Publishing platform package: $platform"
-            
+
             cd "$platform_dir"
-            
+
             # Check if binaries exist
             if [ -d "bin" ] && [ "$(ls -A bin)" ]; then
               npm publish --access public
@@ -297,7 +297,7 @@ jobs:
             else
               echo "Skipping $platform - no binaries found"
             fi
-            
+
             cd - > /dev/null
           done
         env:
