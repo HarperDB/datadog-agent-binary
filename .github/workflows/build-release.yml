@@ -265,6 +265,8 @@ jobs:
 
       - name: Move binaries to build dirs
         run: |
+          echo "Listing artifacts dir again"
+          ls -l artifacts/
           pushd artifacts
           for artifact in "*"
           do
