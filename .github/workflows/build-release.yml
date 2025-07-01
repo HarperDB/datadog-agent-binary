@@ -254,13 +254,25 @@ jobs:
       - name: Download binaries
         uses: actions/download-artifact@v4
         with:
-          path: build/
+          path: artifacts/
 
       - name: List binaries
         run: |
-          ls -l build/
-          ls -l build/*
-          ls -l build/*/bin
+          echo "Listing artifacts dir"
+          ls -l artifacts/
+          echo "Listing artifacts subdirs"
+          ls -l artifacts/*
+
+      - name: Move binaries to build dirs
+        run: |
+          pushd artifacts
+          for artifact in "*"
+          do
+            platform=${artifact#agent-}
+            mkdir -p "../build/$platform/bin"
+            mv "$artifact/*" "../build/$platform/bin/"
+          done
+          popd
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -277,19 +289,7 @@ jobs:
 
       - name: Prepare platform packages with binaries
         run: |
-          # Copy binaries to each platform package
-          for platform_dir in npm/*/; do
-            platform=$(basename "$platform_dir")
-            echo "Processing platform: $platform"
-
-            if [ -d "build/$platform" ]; then
-              mkdir -p "$platform_dir/bin"
-              cp build/$platform/* "$platform_dir/bin/"
-              echo "Copied binaries for $platform"
-            else
-              echo "Warning: No binaries found for $platform"
-            fi
-          done
+          node scripts/create-platform-packages.js --all
 
       - name: Publish platform packages
         run: |
