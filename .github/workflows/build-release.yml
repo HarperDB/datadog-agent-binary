@@ -190,7 +190,9 @@ jobs:
 
       - name: Generate checksums
         run: |
+          ls -l
           cd release-assets
+          ls -l
           sha256sum * > checksums.txt
 
       - name: Create Release
