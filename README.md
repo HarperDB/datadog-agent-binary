@@ -86,11 +86,11 @@ const result = await builder.buildForCurrentPlatform({
 
 | OS | Architecture | Status |
 |----|-------------|--------|
-| Linux | x64 | ✅ |
+| Linux | x86_64 | ✅ |
 | Linux | arm64 | ✅ |
-| Windows | x64 | ✅ |
+| Windows | x86_64 | ✅ |
 | Windows | arm64 | 🚫 |
-| macOS | x64 | ✅ |
+| macOS | x86_64 | ✅ |
 | macOS | arm64 | ✅ |
 
 Windows arm64 support is blocked by [Chocolatey](https://chocolatey.org) not supporting arm64 natively.
