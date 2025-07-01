@@ -161,6 +161,9 @@ jobs:
           # Create compressed archives for each platform
           cd artifacts
 
+          echo "Recursively listing files in artifacts:"
+          ls -lR
+
           # Linux platforms
           for arch in x86_64 arm64; do
             if [ -d "linux-${arch}" ]; then
