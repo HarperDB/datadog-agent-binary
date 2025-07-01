@@ -166,8 +166,8 @@ jobs:
 
           # Linux platforms
           for arch in x86_64 arm64; do
-            if [ -d "linux-${arch}" ]; then
-              cd "linux-${arch}"
+            if [ -d "agent-linux-${arch}" ]; then
+              cd "agent-linux-${arch}"
               tar -czf "../../release-assets/datadog-agent-${{ github.ref_name }}-linux-${arch}.tar.gz" *
               cd ..
             fi
@@ -178,8 +178,8 @@ jobs:
 
           # macOS platforms
           for arch in x86_64 arm64; do
-            if [ -d "macos-${arch}" ]; then
-              cd "macos-${arch}"
+            if [ -d "agent-macos-${arch}" ]; then
+              cd "agent-macos-${arch}"
               tar -czf "../../release-assets/datadog-agent-${{ github.ref_name }}-macos-${arch}.tar.gz" *
               cd ..
             fi
@@ -190,8 +190,8 @@ jobs:
 
           # Windows platforms
           for arch in x86_64 arm64; do
-            if [ -d "windows-${arch}" ]; then
-              cd "windows-${arch}"
+            if [ -d "agent-windows-${arch}" ]; then
+              cd "agent-windows-${arch}"
               zip -r "../../release-assets/datadog-agent-${{ github.ref_name }}-windows-${arch}.zip" *
               cd ..
             fi
