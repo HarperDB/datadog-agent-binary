@@ -275,7 +275,7 @@ jobs:
             ls -l "$artifact"
             platform=${artifact#agent-}
             mkdir -p "../build/$platform/bin"
-            mv "$artifact/*" "../build/$platform/bin/"
+            mv "$artifact"/* "../build/$platform/bin/"
           done
           popd
 
