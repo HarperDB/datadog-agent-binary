@@ -171,7 +171,7 @@ jobs:
           done
 
           echo "Listing files in release-assets:"
-          ls -l release-assets
+          ls -l ../release-assets
 
           # macOS platforms
           for arch in x86_64 arm64; do
@@ -183,7 +183,7 @@ jobs:
           done
 
           echo "Listing files in release-assets:"
-          ls -l release-assets
+          ls -l ../release-assets
 
           # Windows platforms
           for arch in x86_64 arm64; do
@@ -195,13 +195,15 @@ jobs:
           done
 
           echo "Listing files in release-assets:"
-          ls -l release-assets
+          ls -l ../release-assets
 
       - name: Generate checksums
         run: |
+          echo "Listing current dir"
           ls -l
+          echo "Listing release-assets dir"
+          ls -l release-assets/
           cd release-assets
-          ls -l
           sha256sum * > checksums.txt
 
       - name: Create Release
