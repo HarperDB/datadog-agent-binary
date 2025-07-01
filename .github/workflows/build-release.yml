@@ -170,6 +170,9 @@ jobs:
             fi
           done
 
+          echo "Listing files in release-assets:"
+          ls -l release-assets
+
           # macOS platforms
           for arch in x86_64 arm64; do
             if [ -d "macos-${arch}" ]; then
@@ -179,6 +182,9 @@ jobs:
             fi
           done
 
+          echo "Listing files in release-assets:"
+          ls -l release-assets
+
           # Windows platforms
           for arch in x86_64 arm64; do
             if [ -d "windows-${arch}" ]; then
@@ -187,6 +193,9 @@ jobs:
               cd ..
             fi
           done
+
+          echo "Listing files in release-assets:"
+          ls -l release-assets
 
       - name: Generate checksums
         run: |
