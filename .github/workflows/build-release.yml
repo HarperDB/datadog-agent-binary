@@ -268,7 +268,7 @@ jobs:
           echo "Listing artifacts dir again"
           ls -l artifacts/
           pushd artifacts
-          for artifact in "*"
+          for artifact in *
           do
             echo "Moving contents of $artifact into ../build/$platform/bin/"
             echo "Listing contents of $artifact"
