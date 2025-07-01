@@ -1,4 +1,4 @@
-# Datadog Agent Binary Builder
+# Datadog Agent Binary
 
 [![Datadog Agent Binaries](https://github.com/HarperDB/datadog-agent-binary/actions/workflows/build-release.yml/badge.svg)](https://github.com/HarperDB/datadog-agent-binary/actions/workflows/build-release.yml)
 
